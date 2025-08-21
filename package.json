@@ -21,6 +21,7 @@
     "@headlessui/vue": "^1.7.22",
     "@heroicons/vue": "^2.1.5",
     "@vee-validate/zod": "^4.13.2",
+    "axios": "^1.11.0",
     "json-server": "1.0.0-beta.3",
     "pinia": "^3.0.3",
     "tailwind-merge": "^3.3.1",

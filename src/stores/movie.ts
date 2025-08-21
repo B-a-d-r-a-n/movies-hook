@@ -1,7 +1,6 @@
-import type { Movie } from '@/types/movie'
 import { defineStore } from 'pinia'
-
-const API_URL = 'http://localhost:3000/items'
+import type { Movie } from '@/types/movie'
+import apiClient from '@/api/axios'
 
 export const useMovieStore = defineStore('movies', {
   state: () => ({
@@ -24,8 +23,8 @@ export const useMovieStore = defineStore('movies', {
     async fetchMovies() {
       this.isLoading = true
       try {
-        const response = await fetch(API_URL)
-        this.movies = await response.json()
+        const response = await apiClient.get('/items')
+        this.movies = response.data
       } catch (error) {
         console.error('Failed to fetch movies:', error)
       } finally {
@@ -35,12 +34,8 @@ export const useMovieStore = defineStore('movies', {
 
     async addMovie(movie: Omit<Movie, 'id'>) {
       try {
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...movie, id: Date.now() }),
-        })
-        const newMovie = await response.json()
+        const response = await apiClient.post('/items', movie)
+        const newMovie = response.data
         this.movies.push(newMovie)
         return newMovie
       } catch (error) {
@@ -50,12 +45,8 @@ export const useMovieStore = defineStore('movies', {
 
     async updateMovie(updatedMovie: Movie) {
       try {
-        const response = await fetch(`${API_URL}/${updatedMovie.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(updatedMovie),
-        })
-        const returnedMovie = await response.json()
+        const response = await apiClient.put(`/items/${updatedMovie.id}`, updatedMovie)
+        const returnedMovie = response.data
         const index = this.movies.findIndex((m) => m.id === returnedMovie.id)
         if (index !== -1) {
           this.movies[index] = returnedMovie
@@ -68,7 +59,7 @@ export const useMovieStore = defineStore('movies', {
 
     async deleteMovie(movieId: number) {
       try {
-        await fetch(`${API_URL}/${movieId}`, { method: 'DELETE' })
+        await apiClient.delete(`/items/${movieId}`)
         this.movies = this.movies.filter((m) => m.id !== movieId)
       } catch (error) {
         console.error('Failed to delete movie:', error)
