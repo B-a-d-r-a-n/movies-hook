@@ -1,11 +1,18 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch, watchEffect } from 'vue'
 import { useMovieStore } from '@/stores/movie'
 import type { Movie } from '@/types/movie'
 import { useNotifications } from '@/composables/useNotifications'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
 import * as z from 'zod'
+
+import {
+  useMoviesQuery,
+  useAddMovieMutation,
+  useUpdateMovieMutation,
+  useDeleteMovieMutation,
+} from '@/queries/movies'
 
 // Components
 import AppHeader from '@/components/AppHeader.vue'
@@ -28,8 +35,21 @@ import {
 } from '@headlessui/vue'
 import { ChevronUpDownIcon, CheckIcon } from '@heroicons/vue/20/solid'
 
+// --- TanStack Vue Query ---
+const { data: serverMovies, isLoading, isError } = useMoviesQuery()
+const { mutate: addMovie } = useAddMovieMutation()
+const { mutate: updateMovie } = useUpdateMovieMutation()
+const { mutate: deleteMovie } = useDeleteMovieMutation()
+
 const movieStore = useMovieStore()
 const { addNotification } = useNotifications()
+
+// Sync server state from Vue Query to Pinia store
+watchEffect(() => {
+  if (serverMovies.value) {
+    movieStore.setMovies(serverMovies.value)
+  }
+})
 
 // -- Form Validation --
 const movieSchema = toTypedSchema(
@@ -53,14 +73,16 @@ const [image, imageAttrs] = defineField('image')
 const [genres, genresAttrs] = defineField('genres')
 const [inTheaters, inTheatersAttrs] = defineField('inTheaters')
 
-const onSubmit = handleSubmit(async (values) => {
+const onSubmit = handleSubmit((values) => {
   const payload = { ...values, rating: editingMovie.value?.rating ?? 0 }
   if (editingMovie.value) {
-    await movieStore.updateMovie({ ...payload, id: editingMovie.value.id } as Movie)
-    addNotification('Movie updated successfully.', 'success')
+    updateMovie({ ...payload, id: editingMovie.value.id } as Movie, {
+      onSuccess: () => addNotification('Movie updated successfully.', 'success'),
+    })
   } else {
-    await movieStore.addMovie(payload as Omit<Movie, 'id'>)
-    addNotification('Movie added successfully.', 'success')
+    addMovie(payload as Omit<Movie, 'id'>, {
+      onSuccess: () => addNotification('Movie added successfully.', 'success'),
+    })
   }
   closeForm()
 })
@@ -92,21 +114,15 @@ const inTheatersFilter = ref<boolean | null>(null)
 const currentPage = ref(1)
 const itemsPerPage = 3
 
-onMounted(() => movieStore.fetchMovies())
-
 // -- Computed Properties --
 const filteredMovies = computed(() => {
   let movies = movieStore.movies
-  if (searchQuery.value) {
+  if (searchQuery.value)
     movies = movies.filter((m) => m.name.toLowerCase().includes(searchQuery.value.toLowerCase()))
-  }
-  if (selectedGenres.value.length > 0) {
-    // Movie must have ALL selected genres
+  if (selectedGenres.value.length > 0)
     movies = movies.filter((m) => selectedGenres.value.every((genre) => m.genres.includes(genre)))
-  }
-  if (inTheatersFilter.value !== null) {
+  if (inTheatersFilter.value !== null)
     movies = movies.filter((m) => m.inTheaters === inTheatersFilter.value)
-  }
   return movies
 })
 const totalPages = computed(() => Math.ceil(filteredMovies.value.length / itemsPerPage))
@@ -141,13 +157,17 @@ const confirmDelete = (movie: Movie) => {
   movieToDelete.value = movie
   isConfirmOpen.value = true
 }
-const handleDelete = async () => {
+const handleDelete = () => {
   if (movieToDelete.value) {
-    await movieStore.deleteMovie(movieToDelete.value.id)
-    addNotification(`"${movieToDelete.value.name}" was deleted.`, 'info')
+    deleteMovie(movieToDelete.value.id, {
+      onSuccess: () => addNotification(`"${movieToDelete.value?.name}" was deleted.`, 'info'),
+    })
   }
   isConfirmOpen.value = false
   movieToDelete.value = null
+}
+const handleUpdateRating = (movie: Movie, rating: number) => {
+  updateMovie({ ...movie, rating })
 }
 const clearFilters = () => {
   searchQuery.value = ''
@@ -171,7 +191,7 @@ const clearFilters = () => {
     />
 
     <!-- Movie Grid Skeleton -->
-    <div v-if="movieStore.isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       <div
         v-for="n in 3"
         :key="n"
@@ -199,11 +219,16 @@ const clearFilters = () => {
         :movie="movie"
         @edit="openEditForm(movie)"
         @delete="confirmDelete(movie)"
-        @update-rating="movieStore.updateRating(movie.id, $event)"
+        @update-rating="handleUpdateRating(movie, $event)"
       />
     </div>
     <div v-else class="text-center py-16">
-      <h3 class="text-xl font-semibold text-zinc-600 dark:text-zinc-400">No movies found.</h3>
+      <h3 v-if="isError" class="text-xl font-semibold text-red-600 dark:text-red-400">
+        Failed to load movies.
+      </h3>
+      <h3 v-else class="text-xl font-semibold text-zinc-600 dark:text-zinc-400">
+        No movies found.
+      </h3>
       <p class="text-zinc-500">Try adjusting your filters or search query.</p>
     </div>
 
