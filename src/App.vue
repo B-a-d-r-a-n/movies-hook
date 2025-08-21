@@ -1,11 +1,14 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import NotificationsToast from './components/NotificationsToast.vue'
+</script>
 
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
+  <div
+    class="bg-zinc-50 dark:bg-zinc-900 min-h-screen text-zinc-900 dark:text-zinc-100 p-4 sm:p-8 transition-colors duration-300"
+  >
+    <div class="max-w-screen-xl mx-auto">
+      <router-view />
+      <NotificationsToast />
+    </div>
+  </div>
 </template>
-
-<style scoped></style>
