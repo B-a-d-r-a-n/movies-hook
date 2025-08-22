@@ -7,9 +7,7 @@
     "node": "^20.19.0 || >=22.12.0"
   },
   "scripts": {
-    "dev": "run-p \"dev-server\" \"dev-app\"",
-    "dev-app": "vite",
-    "dev-server": "json-server --watch api/db.json",
+    "dev": "vite",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",
@@ -20,10 +18,10 @@
   "dependencies": {
     "@headlessui/vue": "^1.7.22",
     "@heroicons/vue": "^2.1.5",
+    "@supabase/supabase-js": "^2.39.7",
     "@tanstack/vue-query": "^5.85.5",
     "@vee-validate/zod": "^4.13.2",
     "axios": "^1.11.0",
-    "json-server": "1.0.0-beta.3",
     "pinia": "^3.0.3",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.12",
