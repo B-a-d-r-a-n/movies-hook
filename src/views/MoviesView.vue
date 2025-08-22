@@ -15,6 +15,7 @@ import {
 } from '@/queries/movies'
 
 // Components
+import HeroCarousel from '@/components/HeroCarousel.vue'
 import AppHeader from '@/components/AppHeader.vue'
 import FilterDrawer from '@/components/FilterDrawer.vue'
 import MovieCard from '@/components/MovieCard.vue'
@@ -114,7 +115,9 @@ const inTheatersFilter = ref<boolean | null>(null)
 const currentPage = ref(1)
 const itemsPerPage = 3
 
-// -- Computed Properties --
+// -- Computed Properties  --
+const inTheatersMovies = computed(() => movieStore.movies.filter((m) => m.inTheaters))
+
 const filteredMovies = computed(() => {
   let movies = movieStore.movies
   if (searchQuery.value)
@@ -178,6 +181,8 @@ const clearFilters = () => {
 
 <template>
   <div class="flex flex-col gap-8">
+    <HeroCarousel :movies="inTheatersMovies" />
+
     <AppHeader @add-movie="openAddForm" @open-drawer="isDrawerOpen = true" />
 
     <FilterDrawer
