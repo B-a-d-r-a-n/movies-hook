@@ -4,7 +4,6 @@ import { useMovieStore } from '@/stores/movie'
 import type { Movie } from '@/types/movie'
 import { useNotifications } from '@/composables/useNotifications'
 import { useForm } from 'vee-validate'
-
 import {
   useMoviesQuery,
   useAddMovieMutation,
@@ -33,7 +32,7 @@ import {
   Switch,
 } from '@headlessui/vue'
 import { ChevronUpDownIcon, CheckIcon } from '@heroicons/vue/20/solid'
-import { movieSchema } from '@/lib/zodSchemas'
+import { movieFormSchema } from '@/lib/zodSchemas'
 
 // --- TanStack Vue Query ---
 const { data: serverMovies, isLoading, isError } = useMoviesQuery()
@@ -51,8 +50,8 @@ watchEffect(() => {
 })
 
 // -- Form Validation --
-const { handleSubmit, defineField, errors, resetForm, setValues, meta } = useForm({
-  validationSchema: movieSchema,
+const { handleSubmit, defineField, errors, resetForm, meta } = useForm({
+  validationSchema: movieFormSchema,
 })
 const [name, nameAttrs] = defineField('name')
 const [description, descriptionAttrs] = defineField('description')
@@ -61,7 +60,10 @@ const [genres, genresAttrs] = defineField('genres')
 const [inTheaters, inTheatersAttrs] = defineField('inTheaters')
 
 const onSubmit = handleSubmit((values) => {
-  const payload = { ...values, rating: editingMovie.value?.rating ?? 0 }
+  const payload = {
+    ...values,
+    rating: editingMovie.value?.rating ?? 0,
+  }
   if (editingMovie.value) {
     updateMovie({ ...payload, id: editingMovie.value.id } as Movie, {
       onSuccess: () => addNotification('Movie updated successfully.', 'success'),
@@ -97,7 +99,6 @@ const searchQuery = ref('')
 const selectedGenres = ref<string[]>([])
 const inTheatersFilter = ref<boolean | null>(null)
 const currentPage = ref(1)
-
 const itemsPerPage = 3
 
 // -- Computed Properties --
@@ -135,7 +136,9 @@ const openAddForm = () => {
 }
 const openEditForm = (movie: Movie) => {
   editingMovie.value = movie
-  setValues({ ...movie })
+  resetForm({
+    values: { ...movie },
+  })
   isFormOpen.value = true
 }
 const closeForm = () => {
@@ -147,8 +150,9 @@ const confirmDelete = (movie: Movie) => {
 }
 const handleDelete = () => {
   if (movieToDelete.value) {
+    const movieName = movieToDelete.value.name
     deleteMovie(movieToDelete.value.id, {
-      onSuccess: () => addNotification(`"${movieToDelete.value?.name}" was deleted.`, 'info'),
+      onSuccess: () => addNotification(`"${movieName}" was deleted.`, 'info'),
     })
   }
   isConfirmOpen.value = false

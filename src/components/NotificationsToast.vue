@@ -6,7 +6,7 @@ import { TransitionRoot } from '@headlessui/vue'
 const { notifications, removeNotification } = useNotifications()
 
 const typeClasses = {
-  success: 'bg-green-500 border-green-600',
+  success: 'bg-blue-500 border-green-600',
   error: 'bg-red-500 border-red-600',
   info: 'bg-blue-500 border-blue-600',
 }
@@ -54,9 +54,9 @@ const typeClasses = {
                 <button
                   type="button"
                   @click="removeNotification(notification.id)"
-                  class="inline-flex rounded-md bg-gray-800 text-gray-400 hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  class="inline-flex rounded-md text-gray-400 hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                 >
-                  <span class="sr-only">Close</span>
+                  <span class="text-center">X</span>
                   <XMarkIcon class="h-5 w-5" aria-hidden="true" />
                 </button>
               </div>
