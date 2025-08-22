@@ -3,9 +3,7 @@ import { computed, ref, watch, watchEffect } from 'vue'
 import { useMovieStore } from '@/stores/movie'
 import type { Movie } from '@/types/movie'
 import { useNotifications } from '@/composables/useNotifications'
-import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
-import * as z from 'zod'
 
 import {
   useMoviesQuery,
@@ -35,6 +33,7 @@ import {
   Switch,
 } from '@headlessui/vue'
 import { ChevronUpDownIcon, CheckIcon } from '@heroicons/vue/20/solid'
+import { movieSchema } from '@/lib/zodSchemas'
 
 // --- TanStack Vue Query ---
 const { data: serverMovies, isLoading, isError } = useMoviesQuery()
@@ -45,7 +44,6 @@ const { mutate: deleteMovie } = useDeleteMovieMutation()
 const movieStore = useMovieStore()
 const { addNotification } = useNotifications()
 
-// Sync server state from Vue Query to Pinia store
 watchEffect(() => {
   if (serverMovies.value) {
     movieStore.setMovies(serverMovies.value)
@@ -53,18 +51,6 @@ watchEffect(() => {
 })
 
 // -- Form Validation --
-const movieSchema = toTypedSchema(
-  z.object({
-    name: z.string().min(1, 'Name is required'),
-    description: z.string().optional(),
-    image: z.string().min(1, 'Image URL is required').url('Must be a valid URL'),
-    genres: z.array(z.string()).optional(),
-    inTheaters: z.boolean().optional(),
-    rating: z.number().optional(),
-    id: z.number().optional(),
-  }),
-)
-
 const { handleSubmit, defineField, errors, resetForm, setValues, meta } = useForm({
   validationSchema: movieSchema,
 })
@@ -88,7 +74,7 @@ const onSubmit = handleSubmit((values) => {
   closeForm()
 })
 
-// -- Component State --
+// -- Component State & Logic --
 const isFormOpen = ref(false)
 const isConfirmOpen = ref(false)
 const isDrawerOpen = ref(false)
@@ -107,17 +93,15 @@ const allGenres = ref([
   'Crime',
   'Sport',
 ])
-
-// -- Search and Filter State --
 const searchQuery = ref('')
 const selectedGenres = ref<string[]>([])
 const inTheatersFilter = ref<boolean | null>(null)
 const currentPage = ref(1)
+
 const itemsPerPage = 3
 
-// -- Computed Properties  --
+// -- Computed Properties --
 const inTheatersMovies = computed(() => movieStore.movies.filter((m) => m.inTheaters))
-
 const filteredMovies = computed(() => {
   let movies = movieStore.movies
   if (searchQuery.value)
@@ -134,6 +118,7 @@ const paginatedMovies = computed(() => {
   return filteredMovies.value.slice(start, start + itemsPerPage)
 })
 
+// -- Watchers --
 watch(
   [searchQuery, selectedGenres, inTheatersFilter],
   () => {
@@ -142,7 +127,7 @@ watch(
   { deep: true },
 )
 
-// -- Methods --
+// -- Handlers --
 const openAddForm = () => {
   editingMovie.value = null
   resetForm({ values: { name: '', description: '', image: '', genres: [], inTheaters: false } })
