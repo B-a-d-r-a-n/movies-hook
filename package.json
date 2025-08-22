@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "run-p \"dev-server\" \"dev-app\"",
     "dev-app": "vite",
-    "dev-server": "json-server --watch db.json",
+    "dev-server": "json-server --watch api/db.json",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",
