@@ -10,6 +10,7 @@ interface MovieRow {
   genres: string[]
   in_theaters: boolean
   created_at: string
+  updated_at: string
 }
 
 const transformMovieRow = (row: MovieRow): Movie => ({
@@ -31,11 +32,18 @@ const transformMovieToRow = (movie: Omit<Movie, 'id'> | Movie) => ({
   in_theaters: movie.inTheaters,
 })
 
-export const getMovies = async (): Promise<Movie[]> => {
+interface GetMoviesOptions {
+  sortBy?: string
+  sortOrder?: 'asc' | 'desc'
+}
+
+export const getMovies = async (options?: GetMoviesOptions): Promise<Movie[]> => {
+  const { sortBy = 'updated_at', sortOrder = 'desc' } = options || {}
+
   const { data, error } = await supabase
     .from('movies')
     .select('*')
-    .order('created_at', { ascending: false })
+    .order(sortBy, { ascending: sortOrder === 'asc' })
 
   if (error) {
     throw new Error(`Failed to fetch movies: ${error.message}`)

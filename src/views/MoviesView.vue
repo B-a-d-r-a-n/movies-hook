@@ -34,8 +34,15 @@ import {
 import { ChevronUpDownIcon, CheckIcon } from '@heroicons/vue/20/solid'
 import { movieFormSchema } from '@/lib/zodSchemas'
 
+// --- Sorting & Filtering State ---
+const sortBy = ref('updated_at')
+const sortOrder = ref<'asc' | 'desc'>('desc')
+const searchQuery = ref('')
+const selectedGenres = ref<string[]>([])
+const inTheatersFilter = ref<boolean | null>(null)
+
 // --- TanStack Vue Query ---
-const { data: serverMovies, isLoading, isError } = useMoviesQuery()
+const { data: serverMovies, isLoading, isError } = useMoviesQuery({ sortBy, sortOrder })
 const { mutate: addMovie } = useAddMovieMutation()
 const { mutate: updateMovie } = useUpdateMovieMutation()
 const { mutate: deleteMovie } = useDeleteMovieMutation()
@@ -95,9 +102,6 @@ const allGenres = ref([
   'Crime',
   'Sport',
 ])
-const searchQuery = ref('')
-const selectedGenres = ref<string[]>([])
-const inTheatersFilter = ref<boolean | null>(null)
 const currentPage = ref(1)
 const itemsPerPage = 3
 
@@ -165,6 +169,8 @@ const clearFilters = () => {
   searchQuery.value = ''
   selectedGenres.value = []
   inTheatersFilter.value = null
+  sortBy.value = 'updated_at'
+  sortOrder.value = 'desc'
 }
 </script>
 
@@ -179,6 +185,8 @@ const clearFilters = () => {
       v-model:searchQuery="searchQuery"
       v-model:selectedGenres="selectedGenres"
       v-model:inTheatersFilter="inTheatersFilter"
+      v-model:sortBy="sortBy"
+      v-model:sortOrder="sortOrder"
       :all-genres="allGenres"
       @close="isDrawerOpen = false"
       @clear="clearFilters"

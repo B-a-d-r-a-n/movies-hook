@@ -1,15 +1,27 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
+import { computed } from 'vue'
 import * as moviesService from '@/api/moviesService'
 import type { Movie } from '@/types/movie'
+import type { Ref } from 'vue'
 
 const moviesQueryKeys = {
   all: ['movies'] as const,
+  sorted: (sortBy: string, sortOrder: string) => ['movies', sortBy, sortOrder] as const,
 }
 
-export const useMoviesQuery = () => {
+interface UseMoviesQueryOptions {
+  sortBy: Ref<string>
+  sortOrder: Ref<'asc' | 'desc'>
+}
+
+export const useMoviesQuery = (options: UseMoviesQueryOptions) => {
   return useQuery({
-    queryKey: moviesQueryKeys.all,
-    queryFn: moviesService.getMovies,
+    queryKey: computed(() => moviesQueryKeys.sorted(options.sortBy.value, options.sortOrder.value)),
+    queryFn: () =>
+      moviesService.getMovies({
+        sortBy: options.sortBy.value,
+        sortOrder: options.sortOrder.value,
+      }),
   })
 }
 
