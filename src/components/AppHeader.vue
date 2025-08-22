@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useMovieStore } from '@/stores/movie'
-import ThemeSwitcher from './ThemeSwitcher.vue'
 
 const movieStore = useMovieStore()
 
@@ -29,7 +28,6 @@ defineEmits(['add-movie', 'open-drawer'])
       >
         Add Movie
       </button>
-      <ThemeSwitcher />
     </div>
   </header>
 </template>
